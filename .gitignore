@@ -1,0 +1,38 @@
+# --- Secrets & credentials (NEVER commit) ---
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+# GCP service-account key files — creds belong in Secret Manager, not the repo
+gcp-credentials.json
+service-account*.json
+*-sa.json
+
+# --- Python (backend, added later) ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# --- Node / frontend tooling (if introduced) ---
+node_modules/
+dist/
+.cache/
+npm-debug.log*
+
+# --- GCP / deploy ---
+.gcloudignore
+cloudbuild-local*.yaml
+
+# --- OS / IDE ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
