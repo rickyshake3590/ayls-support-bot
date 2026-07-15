@@ -1,0 +1,10 @@
+# Summit Translate — backend dependencies
+# Pin exact versions with `pip freeze > requirements.txt` after your first install.
+
+fastapi>=0.110
+uvicorn[standard]>=0.29          # ASGI server + WebSocket support
+anthropic>=0.40                  # Claude Haiku translation
+google-cloud-secret-manager>=2.20
+google-cloud-speech>=2.26        # live path STT (wiring TODO)
+google-cloud-texttospeech>=2.16  # TTS out (WaveNet/Standard only)
+python-dotenv>=1.0               # local .env loading (dev only)

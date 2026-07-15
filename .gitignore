@@ -4,12 +4,11 @@
 !.env.example
 *.key
 *.pem
-# GCP service-account key files — creds belong in Secret Manager, not the repo
 gcp-credentials.json
 service-account*.json
 *-sa.json
 
-# --- Python (backend, added later) ---
+# --- Python (backend) ---
 __pycache__/
 *.py[cod]
 .venv/
@@ -28,7 +27,6 @@ npm-debug.log*
 
 # --- GCP / deploy ---
 .gcloudignore
-cloudbuild-local*.yaml
 
 # --- OS / IDE ---
 .DS_Store

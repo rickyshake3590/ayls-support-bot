@@ -1,0 +1,11 @@
+# Never bake secrets or local cruft into the image
+**/.env
+**/.env.*
+.git
+.gitignore
+frontend/
+**/__pycache__/
+**/*.pyc
+**/.venv/
+**/venv/
+*.md
