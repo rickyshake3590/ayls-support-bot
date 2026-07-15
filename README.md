@@ -53,19 +53,13 @@ It's a single static file — open it directly, or serve it:
 ```bash
 cd frontend
 python3 -m http.server 8000
-# visit http://localhost:8000  (draft passphrase: summit2026)
+# visit http://localhost:8000
 ```
 
 ## Deploying
 
 - **To share the draft with testers now:** any static host (GitHub Pages, Netlify, Vercel) serves `frontend/index.html` for free. No GCP needed while STT/translation are still simulated.
 - **Real pilot:** Cloud Run on GCP (§4) — required for the WebSocket live path, Google STT/TTS, and Secret Manager. Containerise once the FastAPI backend exists.
-
-## Security notes
-
-- Keep this repo **private** — it references event infrastructure and (temporarily) a demo passphrase.
-- Real secrets live in Secret Manager, never in the repo. `.env` is gitignored; only `.env.example` is committed.
-- The frontend passphrase check is a UI stub — do not treat it as access control.
 
 ## Budget guardrails (§10)
 
