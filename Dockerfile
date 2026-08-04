@@ -12,8 +12,12 @@ WORKDIR /app
 COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# App code only (frontend/ and .env are excluded via .dockerignore)
+# Backend code (.env excluded via .dockerignore)
 COPY backend/ .
+
+# Frontend is served by FastAPI StaticFiles (spec: one service, no separate host).
+COPY frontend/ ./frontend
+ENV FRONTEND_DIR=/app/frontend
 
 EXPOSE 8080
 # main.py reads $PORT (Cloud Run injects it); binds 0.0.0.0
