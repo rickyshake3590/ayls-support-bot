@@ -40,7 +40,7 @@ def test_handoff_lead_comes_first_and_is_escaped() -> None:
 def test_render_body_formats_question_answer_and_bullets() -> None:
     body = "Question: What is included?\nAnswer: Covered:\n- Food\n- Rooms"
     assert handlers.render_body(body) == (
-        "<b>What is included?</b>\nCovered:\n"
+        f"{handlers.BLUE} <b>What is included?</b>\nCovered:\n"
         f"{handlers.ORANGE} Food\n{handlers.ORANGE} Rooms"
     )
 
@@ -51,7 +51,7 @@ def test_render_body_escapes_html() -> None:
 
 def test_extractive_answer_has_note_and_link() -> None:
     text = handlers.format_answer(rag.Answer(text="Answer: Yes.", url="https://example.org/", mode="extractive"))
-    assert text.startswith(f"<i>{handlers.esc(handlers.EXTRACTIVE_NOTE)}</i>")
+    assert text.startswith(f"⏳ <i>{handlers.esc(handlers.EXTRACTIVE_NOTE)}</i>")
     assert 'href="https://example.org/"' in text
 
 

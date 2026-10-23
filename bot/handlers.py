@@ -29,7 +29,7 @@ AVAILABILITY_NOTE = "Organisers reply when they are available. We cannot promise
 HUMAN_LABEL = "Do you need human assistance?"
 HUMAN_CALLBACK = "human"
 
-EXTRACTIVE_NOTE = "Our assistant is busy. Here is the most relevant official information:"
+EXTRACTIVE_NOTE = "Assistant is busy. Here is the most relevant official information."
 NOT_FOUND = "I could not find that in the official summit information."
 RATE_LIMIT_REPLY = "You are sending messages quickly, please wait a moment."
 TEXT_ONLY_REPLY = "I can only answer text questions at the moment."
@@ -96,7 +96,7 @@ def render_body(text: str) -> str:
     for raw in text.splitlines():
         line = raw.strip()
         if line.startswith("Question:"):
-            lines.append(f"<b>{esc(line[len('Question:'):].strip())}</b>")
+            lines.append(f"{BLUE} <b>{esc(line[len('Question:'):].strip())}</b>")
         elif line.startswith("Answer:"):
             lines.append(esc(line[len("Answer:"):].strip()))
         elif line.startswith("- "):
@@ -109,7 +109,7 @@ def render_body(text: str) -> str:
 def format_answer(result: rag.Answer) -> str:
     parts = []
     if result.mode == "extractive":
-        parts.append(f"<i>{esc(EXTRACTIVE_NOTE)}</i>\n")
+        parts.append(f"⏳ <i>{esc(EXTRACTIVE_NOTE)}</i>\n\n")
     parts.append(render_body(result.text))
     parts.append(f'\n\n🔗 <a href="{html.escape(result.url)}">Official summit page</a>')
     return "".join(parts)
