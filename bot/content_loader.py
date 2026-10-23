@@ -31,23 +31,30 @@ def _url(stem: str) -> str:
     return f"{config.BASE_URL}{route or '/'}"
 
 
-def _event(i: dict[str, Any]) -> str:
+def _event_parts(i: dict[str, Any]) -> dict[str, str]:
+    """One chunk per topic, so each question matches a short, focused text."""
     days = "; ".join(f"Day {d['day']} ({d['label']}): {d['title']}" for d in i["days"])
     fees = "; ".join(f"{f['text']} (source: {f['source']})" for f in i.get("fees", []))
-    return (
-        f"Event: {i['name']}. Organiser: {i['organiser']}. "
-        f"City: {i['city']}, {i['country']}. "
-        f"Dates: {i['dates']['start']} to {i['dates']['end']}. "
-        f"Days: {days}. "
-        f"Contact email: {i['contact']['email']}. WhatsApp: {i['contact']['whatsapp']}. "
-        f"Registration fees: {fees}."
-    )
+    contact = i["contact"]
+    return {
+        "overview": (
+            f"{i['name']} is organised by {i['organiser']}. "
+            f"It takes place in {i['city']}, {i['country']}."
+        ),
+        "dates": f"Dates: {i['dates']['start']} to {i['dates']['end']}. Days: {days}.",
+        "contact": (
+            f"Contact for the summit: email {contact['email']}. "
+            f"WhatsApp: {contact['whatsapp']}."
+        ),
+        "fees": f"Registration fee and cost of the summit: {fees}.",
+    }
 
 
 def _schedule(i: dict[str, Any]) -> str:
     return (
         f"Programme item: {i['title']}. Day {i['day']} ({i['date']}), "
-        f"{i['start']}-{i['end']}, location: {i.get('location', TBC)}. "
+        f"{i['start']}{'-' + i['end'] if i.get('end') else ''}, "
+        f"location: {i.get('location', TBC)}. "
         f"{i.get('description', '')}"
     ).strip()
 
@@ -75,7 +82,6 @@ def _generic(i: dict[str, Any]) -> str:
 
 
 FORMAT = {
-    "event": _event,
     "schedule": _schedule,
     "speakers": _speaker,
     "faq": _faq,
@@ -89,18 +95,22 @@ def _is_hidden(item: dict[str, Any]) -> bool:
     return item.get("answer", "").strip() == TBC
 
 
+def _chunk(chunk_id: str, text: str, stem: str) -> Chunk:
+    return {"id": chunk_id, "text": text, "meta": {"source": stem, "url": _url(stem)}}
+
+
 def _json_chunks(path: pathlib.Path) -> Iterator[Chunk]:
     data = json.loads(path.read_text(encoding="utf-8"))
+    if path.stem == "event":
+        for key, text in _event_parts(data).items():
+            yield _chunk(f"event:{key}", text, path.stem)
+        return
     items = data if isinstance(data, list) else [data]
     fmt = FORMAT.get(path.stem, _generic)
     for n, item in enumerate(items):
         if _is_hidden(item):
             continue
-        yield {
-            "id": f"{path.stem}:{item.get('id', n)}",
-            "text": fmt(item),
-            "meta": {"source": path.stem, "url": _url(path.stem)},
-        }
+        yield _chunk(f"{path.stem}:{item.get('id', n)}", fmt(item), path.stem)
 
 
 def _markdown_chunks(path: pathlib.Path) -> Iterator[Chunk]:
@@ -110,11 +120,7 @@ def _markdown_chunks(path: pathlib.Path) -> Iterator[Chunk]:
         _, _, body = section.partition("\n")
         if body.strip() in ("", TBC):
             continue
-        yield {
-            "id": f"{path.stem}:{n}",
-            "text": section,
-            "meta": {"source": path.stem, "url": _url(path.stem)},
-        }
+        yield _chunk(f"{path.stem}:{n}", section, path.stem)
 
 
 def load_chunks(root: pathlib.Path | None = None) -> list[Chunk]:

@@ -1,2 +1,115 @@
-# Filled in during Phase 4: [{question, expect | expect_none}, ...]
-[]
+# Retrieval eval set. Drafted from content/ (site repo) at phase 4.
+# expect:      substring that must appear (case-insensitive) in one of the retrieved chunks
+# expect_none: true means retrieval must return nothing (off-topic questions)
+
+# --- Fees, cost and registration ---
+- question: "What is the registration fee?"
+  expect: "SGD 300"
+- question: "How much does the summit cost?"
+  expect: "SGD 300"
+- question: "What does the fee cover?"
+  expect: "Accommodation for 2 nights"
+- question: "Are optional tours covered by the fee?"
+  expect: "Optional tours"
+- question: "Are there grants to reduce the fees?"
+  expect: "volunteer roles"
+
+# --- Dates, place and organiser ---
+- question: "When does the summit start?"
+  expect: "2026-12-04"
+- question: "What are the summit dates?"
+  expect: "2026-12-04 to 2026-12-06"
+- question: "Which city is the summit in?"
+  expect: "Chiang Mai"
+- question: "Which country is the summit held in?"
+  expect: "Thailand"
+- question: "Who organises the summit?"
+  known_miss: true  # retrieval gap, see README
+  expect: "The Salvation Army"
+
+# --- Contact ---
+- question: "What is the contact email for the summit?"
+  expect: "ayls2026@smmt.salvationarmy.org"
+- question: "What is the WhatsApp number?"
+  expect: "+65 90732684"
+
+# --- Accommodation, food, transport ---
+- question: "What kind of hotel will we stay in?"
+  expect: "3 star hotels"
+- question: "Can I share a room with my friend?"
+  expect: "twin sharing"
+- question: "Can I stay on after the summit?"
+  known_miss: true  # retrieval gap, see README
+  expect: "beyond Saturday 5th Dec"
+- question: "Is food provided during the summit?"
+  expect: "Food is provided"
+- question: "Is there Thai food during the summit?"
+  expect: "Thai food"
+- question: "Will there be transport from the airport?"
+  expect: "transportation from the airport"
+
+# --- Visas and eligibility ---
+- question: "Do Singaporeans need a visa?"
+  expect: "no visa requirements"
+- question: "Is there an age limit to attend?"
+  expect: "all ages"
+- question: "Can children attend the summit?"
+  expect: "participants of all ages"
+
+# --- Programme ---
+- question: "What can I expect from the summit?"
+  expect: "key note session"
+- question: "What time does the welcome and opening remarks start on day 1?"
+  expect: "09:00-09:10"
+- question: "When is the summit wrap-up on day 2?"
+  expect: "17:00-17:15"
+- question: "What is the community visit on day 3 about?"
+  expect: "08:30-10:00"
+- question: "Is there a mixer night?"
+  expect: "Social & Mixer Night"
+- question: "Is there a panel with Q&A?"
+  expect: "Panel Sharing + Q&A"
+- question: "What is the youth mental health session about?"
+  expect: "Youth Mental Health"
+- question: "Are there breakout groups?"
+  expect: "Breakout Groups"
+- question: "When is the dinner on day 1?"
+  expect: "18:00"
+
+# --- Speakers ---
+- question: "Who is Ann Parnitudom?"
+  expect: "Pawinee (Ann) Parnitudom"
+- question: "Which organisation does Spencer Leung work for?"
+  expect: "GO Organics"
+- question: "Who is Mason Tan?"
+  expect: "Social Work Without Borders"
+- question: "Which speaker is from Mahidol University?"
+  expect: "Mahidol University"
+- question: "Which speaker works with UNHCR?"
+  expect: "United Nations High Commissioner for Refugees"
+- question: "Who is Esther Lee?"
+  expect: "Mustard Sky"
+- question: "Who is the speaker from Chiang Mai University?"
+  expect: "Chiang Mai University"
+
+# --- Off-topic: must return nothing (expect_none) ---
+- question: "Best pizza in Rome?"
+  expect_none: true
+- question: "What is the capital of France?"
+  expect_none: true
+- question: "What is the weather in Tokyo tomorrow?"
+  expect_none: true
+- question: "Who won the 2022 World Cup?"
+  expect_none: true
+- question: "How do I file my income tax in Singapore?"
+  expect_none: true
+- question: "How do I reset my Instagram password?"
+  expect_none: true
+- question: "What is the stock price of Apple?"
+  expect_none: true
+- question: "Write me a poem about the sea."
+  expect_none: true
+- question: "What is the best recipe for pad thai?"
+  expect_none: true
+- question: "How do I renew my Thai driving licence?"
+  expect_none: true

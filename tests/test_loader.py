@@ -83,11 +83,22 @@ def test_faq_formats(site: pathlib.Path) -> None:
     assert chunks["faq:b"] == "Question: Q2?\nAnswer: Covered:\n- Food\nExtras not covered."
 
 
-def test_event_chunk_lists_fees_with_source(site: pathlib.Path) -> None:
-    chunk = next(c for c in load_chunks(site) if c["id"].startswith("event:"))
-    assert "Test Summit" in chunk["text"]
-    assert "SGD 300 (source: Terms)" in chunk["text"]
-    assert chunk["meta"]["url"] == f"{config.BASE_URL}/"
+def test_event_chunks_split_by_topic(site: pathlib.Path) -> None:
+    chunks = {c["id"]: c for c in load_chunks(site)}
+    assert {"event:overview", "event:dates", "event:contact", "event:fees"} <= chunks.keys()
+    assert "Test Summit" in chunks["event:overview"]["text"]
+    assert "SGD 300 (source: Terms)" in chunks["event:fees"]["text"]
+    assert chunks["event:fees"]["meta"]["url"] == f"{config.BASE_URL}/"
+
+
+def test_schedule_without_end_time(site: pathlib.Path) -> None:
+    write_json(site, "schedule.json", [
+        {"id": "dinner", "day": 2, "date": "2026-12-05", "start": "17:30",
+         "end": None, "title": "Dinner", "public": True},
+    ])
+    chunk = next(c for c in load_chunks(site) if c["id"] == "schedule:dinner")
+    assert "17:30," in chunk["text"]
+    assert "None" not in chunk["text"]
 
 
 def test_chunks_without_public_page_cite_home(site: pathlib.Path) -> None:
@@ -98,7 +109,8 @@ def test_chunks_without_public_page_cite_home(site: pathlib.Path) -> None:
 SITE_CONTENT = os.environ.get("SITE_CONTENT_DIR", "")
 
 
-@pytest.mark.skipif(not pathlib.Path(SITE_CONTENT).is_dir(), reason="set SITE_CONTENT_DIR")
+@pytest.mark.skipif(not SITE_CONTENT or not pathlib.Path(SITE_CONTENT).is_dir(),
+                    reason="set SITE_CONTENT_DIR")
 def test_real_site_content_loads() -> None:
     chunks = load_chunks(pathlib.Path(SITE_CONTENT))
     assert len(chunks) > 50
