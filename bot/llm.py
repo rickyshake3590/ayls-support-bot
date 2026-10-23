@@ -88,8 +88,25 @@ def _retry_delay(attempt: int, err: Exception) -> float:
     return BACKOFF_BASE * (2 ** (attempt - 1)) + random.uniform(0, 0.5)
 
 
+def _quota_resets_soon(err: Exception) -> bool:
+    """False when OpenRouter reports the quota is spent and resets later than the retry cap.
+
+    Daily free-tier caps reset hours away, so retrying them only burns more requests.
+    """
+    headers = err.response.headers if getattr(err, "response", None) is not None else {}
+    if headers.get("x-ratelimit-remaining") != "0":
+        return True
+    try:
+        reset_at = int(headers["x-ratelimit-reset"]) / 1000
+    except (KeyError, ValueError):
+        return True
+    return reset_at - time.time() <= RETRY_AFTER_CAP
+
+
 def _is_retryable(err: Exception) -> bool:
-    if isinstance(err, (RateLimitError, APITimeoutError, APIConnectionError)):
+    if isinstance(err, RateLimitError):
+        return _quota_resets_soon(err)
+    if isinstance(err, (APITimeoutError, APIConnectionError)):
         return True
     return isinstance(err, APIStatusError) and err.status_code >= 500
 

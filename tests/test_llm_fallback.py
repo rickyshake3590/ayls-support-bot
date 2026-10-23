@@ -3,6 +3,7 @@
 The OpenAI client is replaced with a scripted fake, so these tests make no network calls.
 """
 
+import time
 from types import SimpleNamespace
 from typing import Any
 
@@ -17,8 +18,8 @@ from bot.rag import Hit
 URL = "https://openrouter.ai/api/v1/chat/completions"
 
 
-def _response(status: int) -> httpx.Response:
-    return httpx.Response(status, request=httpx.Request("POST", URL))
+def _response(status: int, headers: dict[str, str] | None = None) -> httpx.Response:
+    return httpx.Response(status, headers=headers, request=httpx.Request("POST", URL))
 
 
 def reply(text: str | None) -> Any:
@@ -95,6 +96,17 @@ async def test_unavailable_after_retries_exhausted(monkeypatch: pytest.MonkeyPat
     with pytest.raises(LLMUnavailable):
         await llm.complete("sys", "user")
     assert len(client.completions.calls) == 3  # 1 try + LLM_MAX_RETRIES (2)
+
+
+@pytest.mark.asyncio
+async def test_spent_daily_quota_is_not_retried(monkeypatch: pytest.MonkeyPatch) -> None:
+    reset_ms = int((time.time() + 6 * 3600) * 1000)  # daily cap resets in six hours
+    headers = {"x-ratelimit-remaining": "0", "x-ratelimit-reset": str(reset_ms)}
+    spent = RateLimitError("daily cap", response=_response(429, headers), body=None)
+    client = use(monkeypatch, [spent, reply("should not be reached")])
+    with pytest.raises(LLMUnavailable):
+        await llm.complete("sys", "user")
+    assert len(client.completions.calls) == 1
 
 
 @pytest.mark.asyncio
