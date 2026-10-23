@@ -49,3 +49,28 @@ When the LLM is down, extractive mode returns the single best chunk. For "Who or
 - `pytest`: retrieval and LLM fallback tests. Needs a built index. Retrieval tests skip if there is no index. No network calls.
 - `SITE_CONTENT_DIR=<path>/content pytest tests/test_loader.py`: loads the real site content.
 - `python -m scripts.eval_answers`: runs the questions against the live model. Needs `OPENROUTER_API_KEY`. Not run in CI.
+
+## Event-day model switch (4-6 December 2026)
+
+The bot runs on the free model by default. The free route is rate limited and its upstream provider is sometimes congested, so on event days the bot switches to the paid variant of the same model.
+
+| | Model ID | Price |
+|---|---|---|
+| Default | `google/gemma-4-26b-a4b-it:free` | free, shared rate limits |
+| Event days | `google/gemma-4-26b-a4b-it` | $0.09 per million input tokens, $0.30 per million output tokens |
+
+At the paid rate, expect well under a few US dollars for the three event days. This is an estimate from the per-token prices, not a measured cost. Check the OpenRouter usage page after day one.
+
+Switch on the morning of 4 December, once the Fly app exists (Phase 6):
+
+```
+fly secrets set LLM_MODEL=google/gemma-4-26b-a4b-it
+```
+
+Switch back after the summit ends on 6 December:
+
+```
+fly secrets unset LLM_MODEL
+```
+
+Fly restarts the machine on each change. Check the startup log for `model=google/gemma-4-26b-a4b-it` after the switch. Do not use the `:free` suffix on event days.
