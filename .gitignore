@@ -4,29 +4,20 @@
 !.env.example
 *.key
 *.pem
-gcp-credentials.json
-service-account*.json
-*-sa.json
 
-# --- Python (backend) ---
+# --- Runtime data (tickets DB, baked index) ---
+data/
+index/
+
+# --- Python ---
 __pycache__/
 *.py[cod]
 .venv/
 venv/
-env/
 *.egg-info/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
-
-# --- Node / frontend tooling (if introduced) ---
-node_modules/
-dist/
-.cache/
-npm-debug.log*
-
-# --- GCP / deploy ---
-.gcloudignore
 
 # --- OS / IDE ---
 .DS_Store
