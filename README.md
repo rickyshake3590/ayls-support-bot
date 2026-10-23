@@ -23,7 +23,7 @@ are only required when the bot runs.
 ## Retrieval and answers
 
 - Content chunks come from the site repo's `content/` folder (`python -m bot.ingest`).
-- Each question retrieves the top `TOP_K` chunks (default 4) whose cosine distance is at most `MAX_DIST`.
+- Each question retrieves the top `TOP_K` chunks (default 8) whose cosine distance is at most `MAX_DIST`.
 - The LLM answers only from those chunks and replies `NO_ANSWER` when they don't cover the question.
 - If the LLM is unavailable, the best chunk is returned verbatim (extractive mode).
 
@@ -36,10 +36,13 @@ Measured on `tests/eval_questions.yaml` (37 positives, 10 negatives), with the i
 
 0.39 sits between these two. The margin is narrow (about 0.016), so re-run `pytest tests/test_retrieval.py` after any content or model change and retune if a question crosses over.
 
-### Known gaps
+### Retrieval depth
 
-- "Who organises the summit?" and "Can I stay on after the summit?" do not retrieve their expected chunk into the top 4 (`known_miss` in the eval set, strict xfail).
-- In extractive mode (LLM down), these two questions get an unrelated chunk. The human-assistance button is still shown.
+`TOP_K` is 8. At 4, two positives ("Who organises the summit?", "Can I stay on after the summit?") ranked 5th and 6th, inside the distance cutoff but outside the top 4. `MAX_DIST` still gates off-topic questions, so the larger `TOP_K` adds no false positives.
+
+### Known gap: extractive mode
+
+When the LLM is down, extractive mode returns the single best chunk. For "Who organises the summit?" that chunk is still the wrap-up schedule item, not the organiser line. The human-assistance button is shown with it. The LLM path is not affected.
 
 ### Running the evals
 

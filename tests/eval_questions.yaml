@@ -24,7 +24,6 @@
 - question: "Which country is the summit held in?"
   expect: "Thailand"
 - question: "Who organises the summit?"
-  known_miss: true  # retrieval gap, see README
   expect: "The Salvation Army"
 
 # --- Contact ---
@@ -39,7 +38,6 @@
 - question: "Can I share a room with my friend?"
   expect: "twin sharing"
 - question: "Can I stay on after the summit?"
-  known_miss: true  # retrieval gap, see README
   expect: "beyond Saturday 5th Dec"
 - question: "Is food provided during the summit?"
   expect: "Food is provided"

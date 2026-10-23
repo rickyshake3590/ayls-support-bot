@@ -6,7 +6,7 @@ DB_PATH = os.getenv("DB_PATH", "data/tickets.db")
 BASE_URL = "https://youthsummit.salvationarmy.asia"
 EMBED_MODEL = "BAAI/bge-small-en-v1.5"
 MAX_DIST = float(os.getenv("MAX_DIST", "0.39"))   # cosine distance cutoff, tuned in Phase 4
-TOP_K = int(os.getenv("TOP_K", "4"))
+TOP_K = int(os.getenv("TOP_K", "8"))
 
 LLM_MODEL = os.getenv("LLM_MODEL", "google/gemma-4-26b-a4b-it:free")
 LLM_FALLBACK_MODEL = os.getenv("LLM_FALLBACK_MODEL", "")

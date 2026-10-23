@@ -17,13 +17,7 @@ QUESTIONS: list[dict[str, Any]] = yaml.safe_load(EVAL_FILE.read_text(encoding="u
 
 
 def _params() -> list[Any]:
-    params = []
-    for q in QUESTIONS:
-        marks = []
-        if q.get("known_miss"):
-            marks.append(pytest.mark.xfail(strict=True, reason="known retrieval gap"))
-        params.append(pytest.param(q, id=q["question"][:60], marks=marks))
-    return params
+    return [pytest.param(q, id=q["question"][:60]) for q in QUESTIONS]
 
 
 @pytest.fixture(autouse=True)
