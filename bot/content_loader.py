@@ -6,6 +6,7 @@ per section, no anchors). Sections with no public page cite the home page.
 
 import json
 import pathlib
+from datetime import datetime
 from collections.abc import Iterator
 from typing import Any
 
@@ -50,12 +51,20 @@ def _event_parts(i: dict[str, Any]) -> dict[str, str]:
     }
 
 
+def clock12(hhmm: str) -> str:
+    """'09:10' -> '9:10 AM'. Times are read as 24-hour, shown as 12-hour."""
+    return datetime.strptime(hhmm, "%H:%M").strftime("%I:%M %p").lstrip("0")
+
+
 def _schedule(i: dict[str, Any]) -> str:
+    """Time first, in 12-hour format. The label goes at the end so the time leads the line."""
+    label = "Session" if i.get("session") else "Programme item"
+    span = clock12(i["start"])
+    if i.get("end"):
+        span = f"{span} - {clock12(i['end'])}"
     return (
-        f"Programme item: {i['title']}. Day {i['day']} ({i['date']}), "
-        f"{i['start']}{'-' + i['end'] if i.get('end') else ''}, "
-        f"location: {i.get('location', TBC)}. "
-        f"{i.get('description', '')}"
+        f"{span}: {i['title']} ({label}, Day {i['day']}, {i['date']}). "
+        f"Location: {i.get('location', TBC)}. {i.get('description', '')}"
     ).strip()
 
 

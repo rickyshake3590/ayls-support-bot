@@ -58,11 +58,11 @@
 - question: "What can I expect from the summit?"
   expect: "key note session"
 - question: "What time does the welcome and opening remarks start on day 1?"
-  expect: "09:00-09:10"
+  expect: "9:00 AM - 9:10 AM"
 - question: "When is the summit wrap-up on day 2?"
-  expect: "17:00-17:15"
+  expect: "5:00 PM - 5:15 PM"
 - question: "What is the community visit on day 3 about?"
-  expect: "08:30-10:00"
+  expect: "8:30 AM - 10:00 AM"
 - question: "Is there a mixer night?"
   expect: "Social & Mixer Night"
 - question: "Is there a panel with Q&A?"
@@ -72,7 +72,7 @@
 - question: "Are there breakout groups?"
   expect: "Breakout Groups"
 - question: "When is the dinner on day 1?"
-  expect: "18:00"
+  expect: "6:00 PM"
 
 # --- Speakers ---
 - question: "Who is Ann Parnitudom?"

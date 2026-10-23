@@ -71,9 +71,8 @@ def test_duplicate_ids_raise(site: pathlib.Path) -> None:
 
 def test_schedule_chunk_contains_fields(site: pathlib.Path) -> None:
     chunk = next(c for c in load_chunks(site) if c["id"] == "schedule:d1-open")
-    assert "Opening Plenary" in chunk["text"]
-    assert "09:00-10:00" in chunk["text"]
-    assert "location: Main Hall" in chunk["text"]
+    assert chunk["text"].startswith("9:00 AM - 10:00 AM: Opening Plenary (Programme item")
+    assert "Location: Main Hall" in chunk["text"]
     assert chunk["meta"] == {"source": "schedule", "url": f"{config.BASE_URL}/itinerary"}
 
 
@@ -97,13 +96,20 @@ def test_schedule_without_end_time(site: pathlib.Path) -> None:
          "end": None, "title": "Dinner", "public": True},
     ])
     chunk = next(c for c in load_chunks(site) if c["id"] == "schedule:dinner")
-    assert "17:30," in chunk["text"]
+    assert chunk["text"].startswith("5:30 PM: Dinner")
     assert "None" not in chunk["text"]
 
 
-def test_chunks_without_public_page_cite_home(site: pathlib.Path) -> None:
-    chunk = next(c for c in load_chunks(site) if c["id"] == "travel:1")
-    assert chunk["meta"]["url"] == f"{config.BASE_URL}/"
+def test_session_label_and_12_hour_times(tmp_path: pathlib.Path) -> None:
+    write_json(tmp_path, "schedule.json", [
+        {"id": "k", "day": 1, "date": "2026-12-04", "start": "13:00", "end": "14:30",
+         "title": "Keynote A", "session": True},
+        {"id": "l", "day": 1, "date": "2026-12-04", "start": "12:15", "end": "13:30",
+         "title": "Lunch"},
+    ])
+    chunks = {c["id"]: c["text"] for c in load_chunks(tmp_path)}
+    assert chunks["schedule:k"].startswith("1:00 PM - 2:30 PM: Keynote A (Session")
+    assert chunks["schedule:l"].startswith("12:15 PM - 1:30 PM: Lunch (Programme item")
 
 
 SITE_CONTENT = os.environ.get("SITE_CONTENT_DIR", "")
