@@ -73,7 +73,9 @@ def test_schedule_chunk_contains_fields(site: pathlib.Path) -> None:
     chunk = next(c for c in load_chunks(site) if c["id"] == "schedule:d1-open")
     assert chunk["text"].startswith("9:00 AM - 10:00 AM: Opening Plenary (Programme item")
     assert "Location: Main Hall" in chunk["text"]
-    assert chunk["meta"] == {"source": "schedule", "url": f"{config.BASE_URL}/itinerary"}
+    assert chunk["meta"]["source"] == "schedule"
+    assert chunk["meta"]["url"] == f"{config.BASE_URL}/itinerary"
+    assert chunk["meta"]["day"] == "1" and chunk["meta"]["session"] == "no"
 
 
 def test_faq_formats(site: pathlib.Path) -> None:

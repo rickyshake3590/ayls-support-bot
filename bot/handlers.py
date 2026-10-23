@@ -95,7 +95,9 @@ def render_body(text: str) -> str:
     lines = []
     for raw in text.splitlines():
         line = raw.strip()
-        if line.startswith("Question:"):
+        if line.startswith("Heading:"):
+            lines.append(f"📅 <b>{esc(line[len('Heading:'):].strip())}</b>")
+        elif line.startswith("Question:"):
             lines.append(f"{BLUE} <b>{esc(line[len('Question:'):].strip())}</b>")
         elif line.startswith("Answer:"):
             lines.append(esc(line[len("Answer:"):].strip()))

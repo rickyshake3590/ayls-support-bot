@@ -4,7 +4,7 @@ Not run in CI (the free tier is flaky). Needs OPENROUTER_API_KEY and a built ind
 Usage: python -m scripts.eval_answers
 
 Verdicts:
-  PASS      negative got no answer, or positive got an answer written by the LLM
+  PASS      negative got no answer, or positive got an answer from the LLM or the schedule lookup
   FALLBACK  positive got an extractive answer (LLM unavailable): not a grounded pass
   FAIL      negative got an answer, or positive got no answer
 """
@@ -30,7 +30,7 @@ def verdict(case: dict, result: Answer | None) -> str:
         return "PASS" if result is None else "FAIL"
     if result is None:
         return "FAIL"
-    return "PASS" if result.mode == "llm" else "FALLBACK"
+    return "PASS" if result.mode in ("llm", "schedule") else "FALLBACK"
 
 
 async def main() -> int:

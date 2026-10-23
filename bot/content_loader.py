@@ -104,8 +104,23 @@ def _is_hidden(item: dict[str, Any]) -> bool:
     return item.get("answer", "").strip() == TBC
 
 
-def _chunk(chunk_id: str, text: str, stem: str) -> Chunk:
-    return {"id": chunk_id, "text": text, "meta": {"source": stem, "url": _url(stem)}}
+def _chunk(chunk_id: str, text: str, stem: str, extra: dict[str, str] | None = None) -> Chunk:
+    meta = {"source": stem, "url": _url(stem), **(extra or {})}
+    return {"id": chunk_id, "text": text, "meta": meta}
+
+
+def _schedule_meta(i: dict[str, Any]) -> dict[str, str]:
+    """Scalar fields the direct schedule lookup filters and sorts on."""
+    span = clock12(i["start"])
+    if i.get("end"):
+        span = f"{span} - {clock12(i['end'])}"
+    return {
+        "day": str(i["day"]),
+        "start": i["start"],
+        "session": "yes" if i.get("session") else "no",
+        "span": span,
+        "title": i["title"],
+    }
 
 
 def _json_chunks(path: pathlib.Path) -> Iterator[Chunk]:
@@ -119,7 +134,8 @@ def _json_chunks(path: pathlib.Path) -> Iterator[Chunk]:
     for n, item in enumerate(items):
         if _is_hidden(item):
             continue
-        yield _chunk(f"{path.stem}:{item.get('id', n)}", fmt(item), path.stem)
+        extra = _schedule_meta(item) if path.stem == "schedule" else None
+        yield _chunk(f"{path.stem}:{item.get('id', n)}", fmt(item), path.stem, extra)
 
 
 def _markdown_chunks(path: pathlib.Path) -> Iterator[Chunk]:

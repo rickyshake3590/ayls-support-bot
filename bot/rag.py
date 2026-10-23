@@ -25,6 +25,7 @@ SYSTEM = """You are the official Q&A assistant for the Asia Youth Leadership Sum
 Rules:
 - Answer ONLY from the CONTEXT. If the context does not answer the question, reply exactly: NO_ANSWER
 - Be concise (max 5 sentences). Reply in the language of the question.
+- For a list answer, start with one line "Heading: <short title>", for example "Heading: Accommodation options".
 - When the answer has several items (names, sessions, dates, fees), put each item on its own line starting with "- ". Do not list several items in one sentence.
 - For questions about session names, list only the items labelled "Session" in the CONTEXT. Do not list meals, activities or breaks.
 - For schedule or time questions, start each line with the time in 12-hour format, then the title, for example "9:10 AM - 9:25 AM: Ice Breakers". Use the times exactly as the CONTEXT gives them.
@@ -47,7 +48,7 @@ class Hit:
 class Answer:
     text: str
     url: str
-    mode: str  # "llm" or "extractive"
+    mode: str  # "llm", "schedule" (direct lookup) or "extractive"
 
 
 @lru_cache(maxsize=1)
@@ -92,7 +93,7 @@ STOPWORDS = frozenset({
     "about", "after", "again", "could", "does", "during", "from", "have", "other", "would",
     "should", "there", "their", "they", "them", "this", "that", "these", "which", "will",
     "with", "your", "what", "when", "where", "who", "how", "can", "any", "are", "the", "and",
-    "for", "you", "our", "need", "want", "tell", "more", "summit", "date", "dates",
+    "for", "you", "our", "need", "want", "tell", "more", "summit", "date", "dates", "name", "names", "all", "list",
 })
 KEYWORD_BOOST = 0.05  # distance reduction per fraction of query keywords found in a chunk
 QUESTION_BOOST = 0.15  # extra reduction per fraction of query keywords found in the FAQ question
@@ -100,7 +101,51 @@ CANDIDATE_MULTIPLIER = 3
 
 
 def keywords(text: str) -> set[str]:
-    return {w for w in re.findall(r"[a-z]+", text.lower()) if len(w) >= 4 and w not in STOPWORDS}
+    """Distinctive words, singular form, plus day tokens such as day1 from 'day 1'."""
+    found = set()
+    for word in re.findall(r"[a-z]+", text.lower()):
+        if len(word) >= 4 and word not in STOPWORDS:
+            found.add(word[:-1] if word.endswith("s") and len(word) > 4 else word)
+    found.update(f"day{n}" for n in re.findall(r"day\s*(\d)", text.lower()))
+    return found
+
+
+SCHEDULE_WORD = re.compile(r"itinerary|schedule|timetable|programme|program")
+SESSION_WORD = re.compile(r"\bsessions?\b")
+DAY_WORD = re.compile(r"\bday\s*(\d)\b")
+
+
+def schedule_answer_from(items: list[dict[str, str]], question: str) -> Answer | None:
+    """Exact answer for session and itinerary questions that name a day, or ask for sessions.
+
+    Built from the schedule records, not from a ranking, so every matching item is listed.
+    Returns None for other schedule questions, which go to the model.
+    """
+    q = question.lower()
+    wants_sessions = bool(SESSION_WORD.search(q))
+    wants_itinerary = bool(SCHEDULE_WORD.search(q))
+    day = DAY_WORD.search(q)
+    if not (wants_sessions or (wants_itinerary and day)):
+        return None
+
+    chosen = items
+    if day:
+        chosen = [m for m in chosen if m["day"] == day.group(1)]
+    if wants_sessions:
+        chosen = [m for m in chosen if m["session"] == "yes"]
+    if not chosen:
+        return None
+
+    chosen = sorted(chosen, key=lambda m: (m["day"], m["start"]))
+    noun = "Sessions" if wants_sessions else "Itinerary"
+    heading = f"Day {day.group(1)} {noun}" if day else noun
+    lines = [f"Heading: {heading}"] + [f"- {m['span']}: {m['title']}" for m in chosen]
+    return Answer(text="\n".join(lines), url=chosen[0]["url"], mode="schedule")
+
+
+def _schedule_records() -> list[dict[str, str]]:
+    got = _collection().get(where={"source": "schedule"}, include=["metadatas"])
+    return list(got["metadatas"])
 
 
 def question_line(text: str) -> str:
@@ -191,6 +236,10 @@ async def _retrieval_query(question: str) -> str:
 
 async def answer(question: str) -> Answer | None:
     """Answer from summit content, or None when the bot should offer a human."""
+    direct = schedule_answer_from(await asyncio.to_thread(_schedule_records), question)
+    if direct is not None:
+        return direct
+
     key = normalise(question)
     cached = cache.get(key)
     if cached is not None:
