@@ -90,6 +90,14 @@
 - question: "Who is the speaker from Chiang Mai University?"
   expect: "Chiang Mai University"
 
+# --- Typos: spelling is corrected before retrieval ---
+- question: "Is there accomodation during the summit?"
+  expect: "3 star hotels"
+- question: "What is the registraton fee?"
+  expect: "SGD 300"
+- question: "Is there transporation from the airport?"
+  expect: "transportation from the airport"
+
 # --- Off-topic: must return nothing (expect_none) ---
 - question: "Best pizza in Rome?"
   expect_none: true

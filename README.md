@@ -24,6 +24,7 @@ are only required when the bot runs.
 
 - Content chunks come from the site repo's `content/` folder (`python -m bot.ingest`).
 - Each question retrieves the top `TOP_K` chunks (default 8) whose cosine distance is at most `MAX_DIST`.
+- Before retrieval, unknown words are corrected to the closest summit word (for example "accomodation" becomes "accommodation"). Chunks containing the question's keywords, and FAQ chunks whose question contains them, rank higher within the cutoff.
 - The LLM answers only from those chunks and replies `NO_ANSWER` when they don't cover the question.
 - If the LLM is unavailable, the best chunk is returned verbatim (extractive mode).
 

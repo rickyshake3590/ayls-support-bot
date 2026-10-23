@@ -5,6 +5,7 @@ If the LLM is unavailable, fall back to the best chunk verbatim.
 """
 
 import asyncio
+import difflib
 import re
 import time
 from dataclasses import dataclass
@@ -57,14 +58,68 @@ def _collection() -> Any:
     return client.get_collection(COLLECTION)
 
 
+@lru_cache(maxsize=1)
+def _vocabulary() -> frozenset[str]:
+    """Lower-case words of length 4+ from the index, used to correct typos in questions."""
+    docs = _collection().get(include=["documents"])["documents"]
+    return frozenset(w for d in docs for w in re.findall(r"[a-z]+", d.lower()) if len(w) >= 4)
+
+
+def correct_spelling(query: str) -> str:
+    """Replace unknown words with their closest summit word, e.g. accomodation -> accommodation.
+
+    Only words that are not already in the summit vocabulary are changed, and only on a close
+    match, so ordinary words are left alone.
+    """
+    vocab = _vocabulary()
+    ordered = sorted(vocab)
+
+    def fix(match: re.Match[str]) -> str:
+        word = match.group(0)
+        lower = word.lower()
+        if len(lower) < 4 or lower in vocab:
+            return word
+        close = difflib.get_close_matches(lower, ordered, n=1, cutoff=0.87)
+        return close[0] if close else word
+
+    return re.sub(r"[A-Za-z]+", fix, query)
+
+
+STOPWORDS = frozenset({
+    "about", "after", "again", "could", "does", "during", "from", "have", "other", "would",
+    "should", "there", "their", "they", "them", "this", "that", "these", "which", "will",
+    "with", "your", "what", "when", "where", "who", "how", "can", "any", "are", "the", "and",
+    "for", "you", "our", "need", "want", "tell", "more", "summit", "date", "dates",
+})
+KEYWORD_BOOST = 0.05  # distance reduction per fraction of query keywords found in a chunk
+QUESTION_BOOST = 0.15  # extra reduction per fraction of query keywords found in the FAQ question
+CANDIDATE_MULTIPLIER = 3
+
+
+def keywords(text: str) -> set[str]:
+    return {w for w in re.findall(r"[a-z]+", text.lower()) if len(w) >= 4 and w not in STOPWORDS}
+
+
+def question_line(text: str) -> str:
+    """The FAQ question of a chunk, or an empty string for other chunks."""
+    first = text.split("\n", 1)[0]
+    return first[len("Question:"):] if first.startswith("Question:") else ""
+
+
 def retrieve_sync(query: str) -> list[Hit]:
-    """Top-k chunks within the distance cutoff, best first. Blocking: call via to_thread."""
+    """Top-k chunks within the distance cutoff, best first. Blocking: call via to_thread.
+
+    The cutoff uses raw vector distance. Among the chunks inside it, a chunk that contains the
+    question's own keywords ranks higher, so a generic question still finds the right FAQ.
+    """
+    query = correct_spelling(query)
     vector = next(iter(_embedder().query_embed([query]))).tolist()
     result = _collection().query(
         query_embeddings=[vector],
-        n_results=config.TOP_K,
+        n_results=config.TOP_K * CANDIDATE_MULTIPLIER,
         include=["documents", "metadatas", "distances"],
     )
+    terms = keywords(query)
     hits = [
         Hit(text=doc, url=meta["url"], source=meta["source"], dist=dist)
         for doc, meta, dist in zip(
@@ -72,7 +127,15 @@ def retrieve_sync(query: str) -> list[Hit]:
         )
         if dist <= config.MAX_DIST
     ]
-    return sorted(hits, key=lambda h: h.dist)
+
+    def rank(hit: Hit) -> float:
+        if not terms:
+            return hit.dist
+        in_text = len(terms & keywords(hit.text)) / len(terms)
+        in_question = len(terms & keywords(question_line(hit.text))) / len(terms)
+        return hit.dist - KEYWORD_BOOST * in_text - QUESTION_BOOST * in_question
+
+    return sorted(hits, key=rank)[: config.TOP_K]
 
 
 def normalise(question: str) -> str:
