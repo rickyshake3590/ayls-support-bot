@@ -4,8 +4,8 @@ Answers participant questions about the Asia Youth Leadership Summit 2026
 (Chiang Mai, Thailand, 4-6 December 2026) from official summit content only,
 and hands off to a human organiser on request.
 
-Status: Phase 2 (scaffold). Ingestion, retrieval, LLM, and Telegram handling
-are added in later phases.
+Status: Phase 5 code complete (Telegram handlers and handoff). The live Telegram
+test below is pending.
 
 ## Local setup
 
@@ -74,3 +74,25 @@ fly secrets unset LLM_MODEL
 ```
 
 Fly restarts the machine on each change. Check the startup log for `model=google/gemma-4-26b-a4b-it` after the switch. Do not use the `:free` suffix on event days.
+
+## Telegram setup (one time)
+
+1. In Telegram, message @BotFather, send `/newbot`, and save the token. Set the commands `start`, `human`, `end`.
+2. Create a private supergroup for organisers. Enable **Topics** in its settings. Add the bot as an admin with **Manage Topics**.
+3. Get the group ID (starts with `-100`) and set it as `ORGANISER_GROUP_ID`.
+
+Put `TELEGRAM_TOKEN` and `ORGANISER_GROUP_ID` in `.env` (see the OpenRouter key section above) or pass them as environment variables. Never commit them.
+
+Run the bot locally with `python -m bot.main`. Only one instance may poll a token at a time.
+
+## Manual Telegram test
+
+Work through this list in a private chat with the bot, after the index is built:
+
+1. Ask three summit questions (for example "What is the registration fee?"). Each answer shows a `Source:` link and the human button.
+2. Ask an off-topic question ("Best pizza in Rome?"). The bot offers a human.
+3. Tap the button. An organiser topic appears in the group with a ticket card.
+4. Send a message. It arrives in the topic.
+5. Reply from the topic. The user receives it.
+6. Send `/close` in the topic. The user is told the conversation is closed, and the topic closes.
+7. Ask another question. The bot answers again.
