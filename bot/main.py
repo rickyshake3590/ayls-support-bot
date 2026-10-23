@@ -49,6 +49,8 @@ def log_model() -> None:
 
 def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
+    # httpx logs every request URL, and the Telegram URL contains the bot token.
+    logging.getLogger("httpx").setLevel(logging.WARNING)
     log_model()
     build_app().run_polling(drop_pending_updates=True, allowed_updates=Update.ALL_TYPES)
 
