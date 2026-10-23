@@ -54,7 +54,7 @@ SENSITIVE_KEYWORDS: tuple[str, ...] = (
 
 
 def esc(text: str) -> str:
-    return html.escape(text)
+    return html.escape(text, quote=False)
 
 
 def bullets(items: list[str], marker: str = BLUE) -> str:
