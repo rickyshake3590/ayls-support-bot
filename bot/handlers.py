@@ -111,7 +111,7 @@ def format_answer(result: rag.Answer) -> str:
     if result.mode == "extractive":
         parts.append(f"⏳ <i>{esc(EXTRACTIVE_NOTE)}</i>\n\n")
     parts.append(render_body(result.text))
-    parts.append(f'\n\n🔗 <a href="{html.escape(result.url)}">Official summit page</a>')
+    parts.append(f'\n\n🔗 <a href="{html.escape(result.url)}">Official Summit Page</a>')
     return "".join(parts)
 
 
