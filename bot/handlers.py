@@ -14,6 +14,7 @@ from telegram import (
     Update,
     User,
 )
+from telegram.error import TelegramError
 from telegram.ext import ContextTypes
 
 from . import db, rag
@@ -223,8 +224,13 @@ async def close_ticket(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
 
 async def on_error(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
-    # Log the exception type only: exception messages can contain user text.
-    log.error("handler error: %s", type(context.error).__name__)
+    # Log the exception type only, plus Telegram's own error text. That text is an API
+    # explanation such as "Chat is not a forum", never user content. Other messages stay out.
+    err = context.error
+    if isinstance(err, TelegramError):
+        log.error("handler error: %s: %s", type(err).__name__, err.message)
+    else:
+        log.error("handler error: %s", type(err).__name__)
     if isinstance(update, Update) and update.effective_chat and update.effective_chat.type == "private":
         try:
             await _reply(update, ERROR_REPLY, human_markup())
