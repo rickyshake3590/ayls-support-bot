@@ -3,39 +3,24 @@
 import logging
 
 from telegram import Update
-from telegram.ext import (
-    Application,
-    CallbackQueryHandler,
-    CommandHandler,
-    MessageHandler,
-    filters,
-)
+from telegram.ext import Application, CallbackQueryHandler, CommandHandler, MessageHandler, filters
 
-from . import config, db, handlers
+from . import config, handlers
 
 log = logging.getLogger("bot")
 
 
 def build_app() -> Application:
     token = config.require("TELEGRAM_TOKEN")
-    group_id = int(config.require("ORGANISER_GROUP_ID"))
+    config.organiser_handles()  # fail fast if no handles are configured
 
     app = Application.builder().token(token).build()
-    app.bot_data["db"] = db.connect()
-    app.bot_data["organiser_group_id"] = group_id
-
     private = filters.ChatType.PRIVATE
-    group = filters.Chat(chat_id=group_id)
 
     app.add_handler(CommandHandler("start", handlers.start, filters=private))
-    app.add_handler(CommandHandler("human", handlers.open_human, filters=private))
-    app.add_handler(CommandHandler("end", handlers.end_ticket, filters=private))
-    app.add_handler(CallbackQueryHandler(handlers.open_human, pattern=f"^{handlers.HUMAN_CALLBACK}$"))
-    app.add_handler(CommandHandler("close", handlers.close_ticket, filters=group))
+    app.add_handler(CommandHandler("human", handlers.human, filters=private))
+    app.add_handler(CallbackQueryHandler(handlers.human, pattern=f"^{handlers.HUMAN_CALLBACK}$"))
     app.add_handler(MessageHandler(private & ~filters.COMMAND, handlers.private_message))
-    app.add_handler(
-        MessageHandler(group & ~filters.COMMAND & ~filters.StatusUpdate.ALL, handlers.organiser_message)
-    )
     app.add_error_handler(handlers.on_error)
     return app
 

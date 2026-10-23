@@ -24,3 +24,10 @@ def require(name: str) -> str:
     if not v:
         raise RuntimeError(f"Missing env var {name}")
     return v
+
+def organiser_handles() -> list[str]:
+    """Telegram handles participants can message, from ORGANISER_HANDLES=@alice,@bob."""
+    handles = [h.strip() for h in require("ORGANISER_HANDLES").split(",") if h.strip()]
+    if not handles:
+        raise RuntimeError("ORGANISER_HANDLES lists no handles")
+    return handles
